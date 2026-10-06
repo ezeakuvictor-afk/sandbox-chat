@@ -35,19 +35,20 @@
         </div>
 
         <!-- Input Footer -->
-        <form id="chatForm" class="chat-input-area" onsubmit="sendMessage(event)">
-            <input 
-                type="text" 
-                id="messageInput" 
-                placeholder="Type a message..." 
-                autocomplete="off" 
-                required 
-            />
-            <button type="submit" class="send-btn">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                </svg>
-            </button>
+        <form id="chatForm" class="chat-input-area">
+  <input
+    type="text"
+    id="messageInput"
+    placeholder="Type a message..."
+    autocomplete="off"
+    required
+  />
+  <button id="recordBtn" type="button" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">🎤</button>
+  <button type="submit" class="send-btn">
+    <svg viewBox="0 0 24 24" width="20" height="20">
+      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"></path>
+    </svg>
+  </button>
         </form>
     </div>
 
@@ -110,13 +111,21 @@
             // Only show sender name if it's NOT you
             const senderHeader = !isMe ? `<div class="sender-name">${data.username}</div>` : '';
 
+                        let contentHtml = '';
+            if (data.type === 'audio') {
+                contentHtml = `<audio controls src="${data.text}" style="max-width: 200px;"></audio>`;
+            } else {
+                contentHtml = escapeHtml(data.text);
+            }
+
             messageDiv.innerHTML = `
                 ${senderHeader}
                 <div class="message-bubble">
-                    ${escapeHtml(data.text)}
+                    ${contentHtml}
                     <span class="timestamp">${data.timestamp}</span>
                 </div>
             `;
+            
 
             messageBox.appendChild(messageDiv);
             messageBox.scrollTop = messageBox.scrollHeight;
