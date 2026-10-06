@@ -20,6 +20,7 @@
                 <span class="room-emoji">🛋️</span>
                 <div>
                     <h2>The Sandbox</h2>
+                    <span id="countdown-timer">03:00:00</span>
                     <div class="status-indicator">
                         <span class="green-dot"></span>
                         <span id="userWelcome">Connected</span>
@@ -149,6 +150,49 @@
             localStorage.removeItem('sandbox_user');
             window.location.href = 'index.html';
         }
+        // 3 hours in milliseconds
+const THREE_HOURS = 3 * 60 * 60 * 1000;
+
+// Function to manage the countdown display and auto-wipe
+function initChatExpiry() {
+    // Check if a reset anchor time exists in localStorage, otherwise set one now
+    let expiryTime = localStorage.getItem('chatExpiryTime');
+    if (!expiryTime) {
+        expiryTime = Date.now() + THREE_HOURS;
+        localStorage.setItem('chatExpiryTime', expiryTime);
+    }
+
+    const timerDisplay = document.getElementById('countdown-timer');
+
+    const interval = setInterval(() => {
+        const timeLeft = expiryTime - Date.now();
+
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            localStorage.removeItem('chatExpiryTime');
+            
+            // Clear Firebase messages automatically when timer hits zero
+            firebase.database().ref('messages').remove().then(() => {
+                location.reload(); // Refresh page to clear screen
+            });
+            return;
+        }
+
+        // Format time left into HH:MM:SS
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+        timerDisplay.textContent = 
+            String(hours).padStart(2, '0') + ':' + 
+            String(minutes).padStart(2, '0') + ':' + 
+            String(seconds).padStart(2, '0');
+    }, 1000);
+}
+
+// Call this when the page loads
+initChatExpiry();
+        
     </script>
 </body>
 </html>
