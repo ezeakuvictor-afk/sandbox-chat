@@ -67,6 +67,8 @@
             appId: "1:210102696161:web:55d64b3e692a3e57b59fa0"
         };
 
+        
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -98,6 +100,53 @@
                 inputField.value = '';
             }
         };
+
+        let mediaRecorder;
+let audioChunks = [];
+const recordBtn = document.getElementById('recordBtn');
+
+recordBtn.addEventListener('click', async () => {
+    if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const reader = new FileReader();
+                reader.readAsDataURL(audioBlob);
+                
+                reader.onloadend = () => {
+                    const base64Audio = reader.result;
+                    const messagesRef = ref(db, 'sandbox_chats');
+                    const newMessageRef = push(messagesRef);
+                    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+                    set(newMessageRef, {
+                        username: currentUser,
+                        text: base64Audio,
+                        type: 'audio',
+                        timestamp: timeString
+                    });
+                };
+            };
+
+            mediaRecorder.start();
+            recordBtn.style.color = 'red';
+        } catch (err) {
+            alert('Microphone access denied or not supported.');
+        }
+    } else {
+        mediaRecorder.stop();
+        recordBtn.style.color = '';
+    }
+});
+
 
         const messagesRef = ref(db, 'sandbox_chats');
         onChildAdded(messagesRef, (snapshot) => {
